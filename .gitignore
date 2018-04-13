@@ -1,2 +1,3 @@
-project_FGVC5/data/input/
-project_FGVC5/data/working/
+# ignore raw input and intermediate data sets
+**/project_FGVC5/data/input/
+**/project_FGVC5/data/working/
