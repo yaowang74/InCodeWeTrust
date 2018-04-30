@@ -2,7 +2,7 @@
 """
 Spyder Editor
 
-This is a temporary script file.
+Author: InCodeWeTrust
 """
 
 import requests
@@ -58,7 +58,7 @@ image_url_df = parse_json(train_image_file, 'images')
 image_url_list = image_url_df['url'].tolist()
 
 #%%
-def download_image(image_id, image_url):
+def download_image(dest, image_id, image_url):
     """This function save image in batch with multiprocessing.
     
     :param image_id: image id.
@@ -67,11 +67,17 @@ def download_image(image_id, image_url):
     :type image_url: str    
     :param dest: dest possible values: ["train","test","validation"]
     :type dest: str
-    :param id_start_from: image id starts from, has to be positive integer.
-    :type id_start_from: int
-    :returns: image data
+    :returns:
     
     """
+    if dest == "train":
+        saving_path = IMAGE_PATH + "train/"
+    elif dest == "test":
+        saving_path = IMAGE_PATH + "test/"
+    elif dest == "validation":
+        saving_path = IMAGE_PATH + "validation/"
+    else:
+        raise ValueError("Invalid destination argument.")
 
 #    original_image_name = image_url.rsplit('/', 1)[1]
     retry = 0
@@ -90,42 +96,11 @@ def download_image(image_id, image_url):
             continue
 
     if image_retrieved == True:
-#==============================================================================
-#         new_image_name = str(image_id) + '.jpg'
-#         new_image_path = saving_path + new_image_name
-#         with open(new_image_path, 'wb') as handler:
-#             handler.write(image_data)
-#             print("Saved image: {} as {}.".format(original_image_name,
-#                                                   new_image_name))
-#==============================================================================
-        return image_data
-
-def download_helper(dest, img_id, img_url):
-    """A helper function for downloading image in parallel.
-    
-    :param img_id: image id.
-    :type img_id_list: int
-    :param img_url: image url.
-    :type img_url: str    
-    :param dest: dest possible values: ["train","test","validation"]
-    :type dest: str
-    :returns:
-    """
-    if dest == "train":
-        saving_path = IMAGE_PATH + "train/"
-    elif dest == "test":
-        saving_path = IMAGE_PATH + "test/"
-    elif dest == "validation":
-        saving_path = IMAGE_PATH + "validation/"
-    else:
-        raise ValueError("Invalid destination argument.")
-
-    img_data = download_image(image_id=img_id, image_url=img_url)
-    new_image_name = str(img_id) + '.jpg'
-    new_image_path = saving_path + new_image_name
-    if img_data:
+        new_image_name = str(image_id) + '.jpg'
+        new_image_path = saving_path + new_image_name
         with open(new_image_path, 'wb') as handler:
-            handler.write(img_data)
+            handler.write(image_data)
+
 
 def save_image_parallel(image_dataframe, dest):
     """This function save image in batch in parallel.
@@ -139,12 +114,21 @@ def save_image_parallel(image_dataframe, dest):
     image_url_list = image_url_df['url'].tolist()
     # keep constant number of process
     process = Pool(5)
-    job_args = [(index+1, image_url_list[index]) for index, url in enumerate(image_url_list)]
+    job_args = [(dest, index+1, image_url_list[index]) for index, url in enumerate(image_url_list)]
     # PICKUP HERE
-    process.map(download_helper, job_args)
+    process.starmap(download_image, job_args)
 
-save_image_parallel(image_url_df, "train")
+# %%
+
+image_url_df = parse_json(train_image_file, 'images')
+image_url_list = image_url_df['url'].tolist()
+
+# sequentially run these three lings
+save_image_parallel(image_url_df, "validation")
+#save_image_parallel(image_url_df, "train")
+#save_image_parallel(image_url_df, "test")
 #%%
+# No need to use this function as no parallelism implememnted here
 def save_image_serial(image_dataframe, dest, id_start_from=1):
     """This function save image in batch, not in parallel manner.
     
@@ -200,4 +184,6 @@ def save_image_serial(image_dataframe, dest, id_start_from=1):
 #                                                   new_image_name))
     print("DONE!")
 #%%
-save_image_batch(image_url_df,"train",24941)
+
+#save_image_serial(image_url_df,"train",24941)
+
