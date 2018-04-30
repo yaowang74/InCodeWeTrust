@@ -115,7 +115,7 @@ def save_image_parallel(image_dataframe, dest):
     # keep constant number of process
     process = Pool(5)
     job_args = [(dest, index+1, image_url_list[index]) for index, url in enumerate(image_url_list)]
-    # PICKUP HERE
+
     process.starmap(download_image, job_args)
 
 # %%
