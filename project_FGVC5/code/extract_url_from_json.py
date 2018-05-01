@@ -37,7 +37,7 @@ def parse_json(json_file, json_key):
     :returns: pandas data frame with image id and url.
     
     """
-    with open(train_image_file, 'r') as f:
+    with open(json_file, 'r') as f:
         image_dict = json.load(f)
     print(image_dict.keys())
 
@@ -52,10 +52,6 @@ def parse_json(json_file, json_key):
         image_annotation_df = pd.DataFrame(image_dict['annotations'])
         print(image_annotation_df.head())
         return image_annotation_df
-
-#%%
-image_url_df = parse_json(train_image_file, 'images')
-image_url_list = image_url_df['url'].tolist()
 
 #%%
 def download_image(dest, image_id, image_url):
@@ -111,7 +107,7 @@ def save_image_parallel(image_dataframe, dest):
     :type dest: str
     :returns:
     """
-    image_url_list = image_url_df['url'].tolist()
+    image_url_list = image_dataframe['url'].tolist()
     # keep constant number of process
     process = Pool(5)
     job_args = [(dest, index+1, image_url_list[index]) for index, url in enumerate(image_url_list)]
@@ -122,11 +118,20 @@ def save_image_parallel(image_dataframe, dest):
 
 image_url_df = parse_json(train_image_file, 'images')
 image_url_list = image_url_df['url'].tolist()
+save_image_parallel(image_url_df, "train")
 
-# sequentially run these three lings
+# %%
+
+image_url_df = parse_json(valid_image_file, 'images')
+image_url_list = image_url_df['url'].tolist()
 save_image_parallel(image_url_df, "validation")
-#save_image_parallel(image_url_df, "train")
-#save_image_parallel(image_url_df, "test")
+
+# %%
+
+image_url_df = parse_json(test_image_file, 'images')
+image_url_list = image_url_df['url'].tolist()
+save_image_parallel(image_url_df, "test")
+
 #%%
 # No need to use this function as no parallelism implememnted here
 def save_image_serial(image_dataframe, dest, id_start_from=1):
